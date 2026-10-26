@@ -4,7 +4,7 @@
 Uso:  python3 build_catalog.py
 La tabla BOOKS es la fuente de verdad de la biblioteca de seguridad en la web:
 ASINs, portadas (assets/covers/*.jpg, 360 px) y una línea por libro.
-Solo libros de seguridad (app retirada del sitio; decisión de Luis, 21-sep-2026).
+Solo libros de seguridad (prep app not published on this site).
 """
 from pathlib import Path
 
@@ -198,7 +198,7 @@ EN_PAGE = f"""<!DOCTYPE html>
   <h1>Security books written by a practitioner, not a committee.</h1>
   <p>Six U.S. Editions on risk analysis, corporate investigations, interviewing and CPP/PSP exam preparation. Method first, judgment always. Paperback and Kindle on Amazon.com.</p>
   <a class="btn btn-gold" href="#books">See the six books</a>
-  <a class="btn btn-outline" href="#app">The prep app</a>
+  <a class="btn btn-outline" href="#brief">Free newsletter</a>
 </div>
 
 <section class="bio">
@@ -214,6 +214,17 @@ EN_PAGE = f"""<!DOCTYPE html>
 </section>
 
 
+<section id="brief">
+  <h2>The newsletter</h2>
+  <p class="lead">One exam question and one passage from the field, by A. Hertzog.</p>
+  <div class="app">
+    <div class="emoji">✉️</div>
+    <h3>The Security Expert Brief</h3>
+    <p>Each issue: one CPP/PSP practice question, explained, and one passage from the SECURITY EXPERT series, word for word. Free, by email.</p>
+    <a href="https://securityexpertbrief.substack.com/subscribe?utm_source=librosahertzog&amp;utm_medium=en_card">Subscribe free</a>
+  </div>
+</section>
+
 <section id="espanol" lang="es">
   <h2>Serie EXPERTO EN SEGURIDAD · en español</h2>
   <p class="lead">The original Spanish series, also on Amazon.</p>
@@ -227,8 +238,32 @@ EN_PAGE = f"""<!DOCTYPE html>
 </html>
 """
 
+# Prep app not published on this site. Regenerating must keep the newsletter
+# and must not emit the old app button or app-store links.
+def _store_link(html):
+    for chunk in html.split('href="')[1:]:
+        url = chunk.split('"', 1)[0]
+        host = url.split("//", 1)[-1].split("/", 1)[0].split("?", 1)[0].lower()
+        if host.endswith("apple.com"):
+            return url
+        if host.startswith("play.") and host.endswith("google.com"):
+            return url
+    return None
+
+
+def _guard(rel, html):
+    if "The prep app" in html or 'href="#app"' in html:
+        raise SystemExit(f"{rel} contains the prep-app button")
+    store = _store_link(html)
+    if store:
+        raise SystemExit(f"{rel} contains an app-store link")
+    if rel == "en/index.html" and ('id="brief"' not in html or "Free newsletter" not in html):
+        raise SystemExit(f"{rel} is missing the newsletter")
+
+
 if __name__ == "__main__":
     for rel, html in (("libros/index.html", ES_PAGE), ("en/index.html", EN_PAGE)):
+        _guard(rel, html)
         out = ROOT / rel
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(html, encoding="utf-8")
