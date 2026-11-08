@@ -133,6 +133,9 @@
     ["utm_source","utm_medium","utm_campaign"].forEach(function(k){var v=q.get(k); if(v&&/^[\w.-]{1,60}$/.test(v)) parts.push(k+"="+v);});
     if(parts.length) and_btn.href="https://play.google.com/store/apps/details?id=com.luispalma.seguridadpro&referrer="+encodeURIComponent(parts.join("&"));
   } catch(e) {}
+  // 8-nov-2026 (Luis: «lo más práctico es que vayan a App Store o a Android»): en el teléfono salta directo a su tienda,
+  // que muestra el mismo ícono del video. ?stay=1 deja ver la página.
+  if(!/[?&]stay=1/.test(location.search)){ if(ios){ location.replace(ios_btn.href); } else if(android){ location.replace(and_btn.href); } }
   if(ios){ and_btn.className="store secondary"; hint.textContent=en?"On Android? Use the second button.":"¿Estás en Android? Usa el segundo botón."; }
   else if(android){ stores.insertBefore(and_btn,ios_btn); ios_btn.className="store secondary"; hint.textContent=en?"On iPhone? Use the second button.":"¿Estás en iPhone? Usa el segundo botón."; }
   else { hint.textContent=en?"Open this on your phone, or pick your store.":"Ábrelo desde tu teléfono, o elige tu tienda."; }
